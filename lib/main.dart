@@ -108,6 +108,47 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // 初期化処理を行う
+    _loadData();
+  }
+
+  void _loadData() async {
+    // 外部リソースからデータを読み込む処理を行う
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? encodedData = prefs.getString('data');
+
+    if (encodedData == null) {
+      return;
+    }
+
+    final Map<String, dynamic> decodedData = jsonDecode(encodedData);
+    final List<Income> loadedIncomes = [];
+    final List<Expense> loadedExpenses = [];
+
+    for (final item in decodedData['incomes']) {
+      loadedIncomes.add(Income(
+      description: jsonDecode(item)['description'],
+      amount: jsonDecode(item)['amount'],
+//      date: DateTime.parse(item['date']),
+        ));
+    }
+    for (final item in decodedData['expenses']) {
+      loadedExpenses.add(Expense(
+      description: jsonDecode(item)['description'],
+      amount: jsonDecode(item)['amount'],
+//      date: DateTime.parse(item['date']),
+      ));
+    }
+
+    setState(() {
+      incomes.addAll(loadedIncomes);
+      expenses.addAll(loadedExpenses);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
