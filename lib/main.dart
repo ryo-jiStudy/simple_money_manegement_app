@@ -171,11 +171,11 @@ class _HomePageState extends State<HomePage> {
         onPressed: _addExpense,
         child: Text('Add Expense'),
       ),
-            SizedBox(height: 10),
-            TextButton(
-              onPressed: () => _saveData(),
-              child: Text('Save'),
-            ),
+      SizedBox(height: 10),
+      TextButton(
+        onPressed: () => _saveData(),
+        child: Text('Save'),
+      ),
       SizedBox(height: 16.0),
       Text(
         'Summary',
