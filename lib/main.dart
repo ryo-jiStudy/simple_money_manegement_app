@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(MyApp());
@@ -9,6 +12,11 @@ class Income {
   final double amount;
 
   Income({required this.description, required this.amount});
+
+  Map<String, dynamic> toJson() => {
+    'description': description,
+    'amount': amount,
+  };
 }
 
 class Expense {
@@ -16,6 +24,11 @@ class Expense {
   final double amount;
 
   Expense({required this.description, required this.amount});
+
+  Map<String, dynamic> toJson() => {
+    'description': description,
+    'amount': amount,
+  };
 }
 
 class MyApp extends StatelessWidget {
@@ -76,6 +89,22 @@ class _HomePageState extends State<HomePage> {
       total -= expenses.fold(0.0, (sum, expense) => sum.toDouble() + expense.amount);
     }
     return total;
+  }
+
+  void _saveData() async {
+    // SharedPreferencesのインスタンスを取得する
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    List<String> incomesA = incomes.map((income) => jsonEncode(income.toJson())).toList();
+    List<String> expensesA = expenses.map((expense) => jsonEncode(expense.toJson())).toList();
+    Map<String, List<String>> data = {
+      'incomes': incomesA,
+      'expenses': expensesA,
+    };
+    String encodedData = jsonEncode(data);
+
+    // Save data to device storage
+    prefs.setString('data', encodedData);
   }
 
   @override
@@ -142,6 +171,11 @@ class _HomePageState extends State<HomePage> {
         onPressed: _addExpense,
         child: Text('Add Expense'),
       ),
+            SizedBox(height: 10),
+            TextButton(
+              onPressed: () => _saveData(),
+              child: Text('Save'),
+            ),
       SizedBox(height: 16.0),
       Text(
         'Summary',
