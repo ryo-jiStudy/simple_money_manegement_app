@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(MyApp());
@@ -9,6 +12,11 @@ class Income {
   final double amount;
 
   Income({required this.description, required this.amount});
+
+  Map<String, dynamic> toJson() => {
+    'description': description,
+    'amount': amount,
+  };
 }
 
 class Expense {
@@ -16,6 +24,11 @@ class Expense {
   final double amount;
 
   Expense({required this.description, required this.amount});
+
+  Map<String, dynamic> toJson() => {
+    'description': description,
+    'amount': amount,
+  };
 }
 
 class MyApp extends StatelessWidget {
@@ -76,6 +89,63 @@ class _HomePageState extends State<HomePage> {
       total -= expenses.fold(0.0, (sum, expense) => sum.toDouble() + expense.amount);
     }
     return total;
+  }
+
+  void _saveData() async {
+    // SharedPreferencesのインスタンスを取得する
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    List<String> incomesA = incomes.map((income) => jsonEncode(income.toJson())).toList();
+    List<String> expensesA = expenses.map((expense) => jsonEncode(expense.toJson())).toList();
+    Map<String, List<String>> data = {
+      'incomes': incomesA,
+      'expenses': expensesA,
+    };
+    String encodedData = jsonEncode(data);
+
+    // Save data to device storage
+    prefs.setString('data', encodedData);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // 初期化処理を行う
+    _loadData();
+  }
+
+  void _loadData() async {
+    // 外部リソースからデータを読み込む処理を行う
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String? encodedData = prefs.getString('data');
+
+    if (encodedData == null) {
+      return;
+    }
+
+    final Map<String, dynamic> decodedData = jsonDecode(encodedData);
+    final List<Income> loadedIncomes = [];
+    final List<Expense> loadedExpenses = [];
+
+    for (final item in decodedData['incomes']) {
+      loadedIncomes.add(Income(
+      description: jsonDecode(item)['description'],
+      amount: jsonDecode(item)['amount'],
+//      date: DateTime.parse(item['date']),
+        ));
+    }
+    for (final item in decodedData['expenses']) {
+      loadedExpenses.add(Expense(
+      description: jsonDecode(item)['description'],
+      amount: jsonDecode(item)['amount'],
+//      date: DateTime.parse(item['date']),
+      ));
+    }
+
+    setState(() {
+      incomes.addAll(loadedIncomes);
+      expenses.addAll(loadedExpenses);
+    });
   }
 
   @override
@@ -141,6 +211,11 @@ class _HomePageState extends State<HomePage> {
       ElevatedButton(
         onPressed: _addExpense,
         child: Text('Add Expense'),
+      ),
+      SizedBox(height: 10),
+      TextButton(
+        onPressed: () => _saveData(),
+        child: Text('Save'),
       ),
       SizedBox(height: 16.0),
       Text(
